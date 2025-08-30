@@ -1,6 +1,8 @@
-﻿fastapi
+fastapi
 uvicorn[standard]
 SQLAlchemy
 psycopg[binary]
 python-dotenv
 pydantic
+gunicorn
+alembic
