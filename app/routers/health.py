@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from sqlalchemy import text
 from app.database import SessionLocal
 
-router = APIRouter()
+router = APIRouter(prefix="/health", tags=["health"])
 
-@router.get("", tags=["health"])
+@router.get("/")
 def health_check():
+    db = SessionLocal()
     try:
-        db = SessionLocal()
         db.execute(text("SELECT 1"))
         return {"status": "ok", "db": "connected"}
     except Exception as e:
