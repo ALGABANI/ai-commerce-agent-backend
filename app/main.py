@@ -1,8 +1,17 @@
-﻿from fastapi import FastAPI
-from .routers import health, products
+from fastapi import APIRouter
+from sqlalchemy import text
+from app.database import SessionLocal
 
-app = FastAPI(title="AI Commerce Agent")
+# هنا ضفنا prefix = "/health"
+router = APIRouter(prefix="/health", tags=["health"])
 
-# Routers
-app.include_router(health.router)
-app.include_router(products.router)
+@router.get("/")   # هتكون النتيجة: /health/
+def health_check():
+    db = SessionLocal()
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "ok", "db": "connected"}
+    except Exception as e:
+        return {"status": "error", "db_error": str(e)}
+    finally:
+        db.close()
