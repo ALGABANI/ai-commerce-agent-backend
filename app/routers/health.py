@@ -1,8 +1,16 @@
-﻿from fastapi import APIRouter
-from ..schemas import HealthOut
+from fastapi import APIRouter, Depends
+from sqlalchemy import text
+from app.database import SessionLocal
 
-router = APIRouter(prefix="", tags=["health"])
+router = APIRouter()
 
-@router.get("/", response_model=HealthOut)
-def root_health():
-    return {"ok": True, "service": "ai-commerce-backend"}
+@router.get("", tags=["health"])
+def health_check():
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        return {"status": "ok", "db": "connected"}
+    except Exception as e:
+        return {"status": "error", "db_error": str(e)}
+    finally:
+        db.close()
