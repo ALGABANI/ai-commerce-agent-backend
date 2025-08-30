@@ -1,16 +1,9 @@
 from fastapi import APIRouter
-from sqlalchemy import text
-from app.database import SessionLocal
+from ..schemas import HealthOut
 
+# خليه prefix واضح لتفادي خطأ "Prefix and path cannot be both empty"
 router = APIRouter(prefix="/health", tags=["health"])
 
-@router.get("/")
+@router.get("", response_model=HealthOut)
 def health_check():
-    db = SessionLocal()
-    try:
-        db.execute(text("SELECT 1"))
-        return {"status": "ok", "db": "connected"}
-    except Exception as e:
-        return {"status": "error", "db_error": str(e)}
-    finally:
-        db.close()
+    return {"ok": True, "service": "ai-commerce-backend"}
