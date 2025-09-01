@@ -1,53 +1,35 @@
-﻿from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Text
-from sqlalchemy.orm import relationship
 from datetime import datetime
-from .database import Base
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Numeric, func
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+
+from app.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    name = Column(String(255), nullable=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
 
-    orders = relationship("Order", back_populates="user")
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-class Vendor(Base):
-    __tablename__ = "vendors"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
-    source_url = Column(Text, nullable=True)   # Alibaba / supplier URL
-    verified_score = Column(Float, default=0)  # simple trust score 0..1
-    contact_email = Column(String(255), nullable=True)
-    contact_phone = Column(String(64), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    products = relationship("Product", back_populates="vendor")
 
 class Product(Base):
     __tablename__ = "products"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), nullable=False)
-    sku = Column(String(128), index=True, nullable=True)
-    vendor_id = Column(Integer, ForeignKey("vendors.id"))
-    base_price = Column(Float, default=0.0)
-    currency = Column(String(16), default="USD")
-    link = Column(Text, nullable=True)  # product URL
 
-    vendor = relationship("Vendor", back_populates="products")
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-class Order(Base):
-    __tablename__ = "orders"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    product_id = Column(Integer, ForeignKey("products.id"))
-    qty = Column(Integer, default=1)
-    est_shipping = Column(Float, default=0.0)
-    est_customs = Column(Float, default=0.0)
-    est_margin = Column(Float, default=0.0)
-    total_est = Column(Float, default=0.0)
-    status = Column(String(32), default="draft")
-    created_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates="orders")
+class ContactMessage(Base):
+    __tablename__ = "contact_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
