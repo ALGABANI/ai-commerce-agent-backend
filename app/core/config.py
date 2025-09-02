@@ -1,57 +1,49 @@
 # app/core/config.py
+from functools import lru_cache
 from typing import List
+
+from pydantic import AnyUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import computed_field
 
 
 class Settings(BaseSettings):
-    # App
-    APP_NAME: str = "AI Commerce Agent"
+    # ---- App ----
+    PROJECT_NAME: str = Field("AI Commerce Agent", alias="APP_NAME")
     APP_ENV: str = "production"
 
-    # Server
-    PORT: int = 8000
+    # ---- Database ----
+    DATABASE_URL: AnyUrl
 
-    # DB
-    DATABASE_URL: str
-
-    # JWT
-    JWT_SECRET_KEY: str = "change-this-to-a-long-random-secret"
-    JWT_ALGORITHM: str = "HS256"
+    # ---- Auth/JWT ----
+    JWT_SECRET_KEY: str = Field(..., alias="SECRET_KEY")
+    JWT_ALGORITHM: str = Field("HS256", alias="ALGORITHM")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # Email
+    # ---- Email (optional) ----
     SMTP_SERVER: str | None = None
     SMTP_PORT: int | None = None
     SMTP_USER: str | None = None
     SMTP_PASSWORD: str | None = None
 
-    # CORS (comma-separated string in .env, e.g. "*", or "https://a.com,https://b.com")
+    # ---- CORS ----
+    # Accept either CSV string "https://a,https://b" or "*"
     CORS_ORIGINS: str = "*"
 
-    # Load .env
+    # Render provides PORT env automatically; we don’t need to use it directly
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    # Back-compat alias so main.py can use settings.PROJECT_NAME if referenced anywhere
-    @computed_field
-    @property
-    def PROJECT_NAME(self) -> str:
-        return self.APP_NAME
 
-    # Parsed CORS list
-    @computed_field
-    @property
-    def CORS_ORIGINS_LIST(self) -> List[str]:
-        raw = self.CORS_ORIGINS.strip()
-        if not raw:
-            return []
-        if raw == "*":
-            return ["*"]
-        return [o.strip() for o in raw.split(",") if o.strip()]
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()
 
 
-settings = Settings()
+settings = get_settings()
 
 
-def get_cors_origins() -> List[str]:
-    return settings.CORS_ORIGINS_LIST
+def get_cors_origins() -> List[str] | str:
+    raw = settings.CORS_ORIGINS.strip()
+    if raw == "*":
+        return "*"
+    # split by comma and trim
+    return [o.strip() for o in raw.split(",") if o.strip()]
