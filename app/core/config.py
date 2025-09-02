@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -28,34 +27,21 @@ class Settings(BaseSettings):
     # Server
     PORT: Optional[int] = 10000
 
-    # CORS (comma-separated string or "*")
-    CORS_ORIGINS: Optional[str] = "*"
+    # CORS (keep as string; parse later)
+    CORS_ORIGINS: str = "*"
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        case_sensitive=False,   # allow SECRET_KEY / secret_key, etc.
-        extra="ignore",         # ignore unknown env vars instead of failing
+        case_sensitive=False,
+        extra="ignore",
     )
 
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def normalize_cors(cls, v: Optional[str]) -> str | List[str]:
-        if not v or v.strip() == "*":
-            return ["*"]
-        # Support comma-separated list
-        return [item.strip() for item in v.split(",") if item.strip()]
-
-    # Expose normalized list form for downstream use
     @property
     def cors_origins_list(self) -> List[str]:
-        value = self.CORS_ORIGINS
-        if isinstance(value, list):
-            return value
-        if not value:
+        v = (self.CORS_ORIGINS or "").strip()
+        if not v or v == "*":
             return ["*"]
-        if value == "*":
-            return ["*"]
-        return [s.strip() for s in str(value).split(",") if s.strip()]
+        return [s.strip() for s in v.split(",") if s.strip()]
 
 
 settings = Settings()
