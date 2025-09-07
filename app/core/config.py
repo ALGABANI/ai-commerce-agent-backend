@@ -22,8 +22,15 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "*"
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+      env_file=".env",
+      env_file_encoding="utf-8",
+      extra="ignore",
     )
+
+    @property
+    def APP_NAME(self) -> str:
+        # Backward compatibility if any code still references settings.APP_NAME
+        return self.PROJECT_NAME
 
 
 @lru_cache(maxsize=1)
