@@ -1,11 +1,10 @@
-# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings, get_cors_origins
 from app.routers import health, auth, users, products, contact
 
-app = FastAPI(title=settings.APP_NAME)
+app = FastAPI(title=settings.PROJECT_NAME)
 
 # CORS
 origins = get_cors_origins()
@@ -27,4 +26,4 @@ app.include_router(contact.router)
 # Root
 @app.get("/", tags=["root"])
 def root():
-    return {"ok": True, "service": settings.APP_NAME}
+    return {"ok": True, "service": settings.PROJECT_NAME}
